@@ -25,6 +25,8 @@ RUN pip install --upgrade pip && \
         albumentations \
         torchmetrics \
         scipy \
+        timm \
+        scikit-learn \
         opencv-python-headless \
         tqdm \
         numpy \
