@@ -17,8 +17,9 @@ class ModelConfig:
     # SAM3 backbone
     sam3_model_name: str = "facebook/sam3"
     sam3_checkpoint: str = None
-    sam3_config: str = None
-
+    sam3_config_path: Optional[str] = None
+    freeze: bool = True
+    
     # Adapter settings
     use_adapters: bool = True
     adapter_dim: int = 64
