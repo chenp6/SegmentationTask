@@ -15,7 +15,7 @@ class DataConfig:
 @dataclass
 class ModelConfig:
     # SAM3 backbone
-    sam3_model_name: str = "facebook/sam3-hiera-large"
+    sam3_model_name: str = "facebook/sam3"
     sam3_checkpoint: str = None
     sam3_config: str = None
 

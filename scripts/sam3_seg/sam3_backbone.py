@@ -1,154 +1,79 @@
-"""
-SAM3 Hiera image encoder as a multi-scale feature backbone.
-
-Loads the SAM3 model and exposes only the image encoder (Hiera),
-returning multi-scale feature maps suitable for a UNet-style decoder.
-
-Usage:
-    backbone = SAM3Backbone(model_name="facebook/sam3-hiera-large")
-    features = backbone(images)  # images: [B, 3, H, W]
-    # features: {"stage0": [B,C0,H0,W0], ..., "stage3": [B,C3,H3,W3]}
-"""
+import os
 import torch
-import torch.nn as nn
-from typing import Dict, Optional
+from typing import Optional
 
-
-class SAM3Backbone(nn.Module):
-    """
-    Wraps the SAM3 image encoder (Hiera) to produce multi-scale features.
-
-    The Hiera backbone returns a list of feature maps at different resolutions.
-    We expose them as a dict keyed by stage name for the decoder to consume.
-    """
-
-    def __init__(
-        self,
-        model_name: str = "facebook/sam3-hiera-large",
-        checkpoint_path: Optional[str] = None,
-        config_path: Optional[str] = None,
-        freeze: bool = True,
-    ):
-        super().__init__()
+class SAM3Backbone:
+    def __init__(self, model_name: str = "facebook/sam3", checkpoint_path: Optional[str] = None, config_path: Optional[str] = None):
         self.model_name = model_name
-        self._freeze = freeze
-
-        # Load the SAM3 image encoder
+        self.checkpoint_path = checkpoint_path
         self.encoder = self._load_encoder(model_name, checkpoint_path, config_path)
-
-        if freeze:
-            self._freeze_encoder()
-
+    
     def _load_encoder(self, model_name, checkpoint_path, config_path):
-        """Load SAM3 image encoder from HuggingFace or local checkpoint."""
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        # Try local checkpoint + config first
+        """Load the SAM3 encoder from HuggingFace or local checkpoint."""
         try:
-            from sam3.build_sam import build_sam3
-            if checkpoint_path and config_path:
-                sam3_model = build_sam3(
-                    config_path, checkpoint_path, device=device
-                )
-                return sam3_model.image_encoder
+            # 優先使用本地 checkpoint
+            if checkpoint_path and os.path.exists(checkpoint_path):
+                print(f"Loading SAM3 encoder from local checkpoint: {checkpoint_path}")
+                state_dict = torch.load(checkpoint_path, map_location='cpu')
+                # 假設你有對應的 model architecture
+                model = self._build_sam3_model()
+                model.load_state_dict(state_dict)
+                return model
+            
+            # 從 HuggingFace 下載和載入
+            print(f"Loading SAM3 encoder from HuggingFace: {model_name}")
+            
+            # 方式 1：使用 HuggingFace hub API 直接下載權重
+            from huggingface_hub import hf_hub_download
+            
+            # 下載 sam3.pt 權重檔案
+            model_path = hf_hub_download(
+                repo_id=model_name,
+                filename="sam3.pt",
+                cache_dir=os.environ.get('HF_HOME', './hf_cache')
+            )
+            print(f"Downloaded SAM3 model to: {model_path}")
+            
+            # 載入權重
+            state_dict = torch.load(model_path, map_location='cpu')
+            
+            # 建立模型架構並載入權重
+            model = self._build_sam3_model()
+            model.load_state_dict(state_dict)
+            
+            return model
+            
+        except Exception as e:
+            print(f"Error loading SAM3 encoder: {e}")
+            print(f"Trying alternative loading method...")
+            
+            # 備選方案：嘗試使用 transformers 自動模型載入
+            try:
+                from transformers import AutoModel
+                model = AutoModel.from_pretrained(model_name)
+                return model
+            except Exception as fallback_error:
+                print(f"Alternative loading also failed: {fallback_error}")
+                raise
+    
+    def _build_sam3_model(self):
+        """Build the SAM3 model architecture.
+        
+        注意：你需要提供正確的 SAM3 模型架構定義。
+        這裡是一個簡單的佔位符。
+        """
+        try:
+            # 如果 SAM3 套件已安裝，使用官方實現
+            from sam3.build_sam import build_sam3_vision_encoder
+            return build_sam3_vision_encoder()
         except ImportError:
-            pass
-
-        # Try loading via sam3 package from HF hub
-        try:
-            from sam3.build_sam import build_sam3_hf
-            sam3_model = build_sam3_hf(model_name, device=device)
-            return sam3_model.image_encoder
-        except (ImportError, Exception) as e:
-            last_error = e
-
-        # Fall back to HuggingFace transformers SAM3
-        try:
-            from transformers import Sam3Model
-            sam3_model = Sam3Model.from_pretrained(model_name)
-            sam3_model.to(device)
-            return sam3_model.image_encoder
-        except (ImportError, Exception) as e:
-            last_error = e
-
-        raise RuntimeError(
-            f"Could not load SAM3 model '{model_name}'. "
-            f"Install sam3: pip install git+https://github.com/facebookresearch/sam3.git\n"
-            f"Error: {last_error}"
-        )
-
-    def _freeze_encoder(self):
-        """Freeze all encoder parameters."""
-        for param in self.encoder.parameters():
-            param.requires_grad = False
-
-    @torch.no_grad()
-    def get_feature_info(self, image_size: int = 1024) -> Dict[str, tuple]:
-        """
-        Run a dummy forward pass to discover feature map shapes.
-        Returns dict: stage_name -> (C, H, W).
-        """
-        device = next(self.encoder.parameters()).device
-        dummy = torch.randn(1, 3, image_size, image_size, device=device)
-        features = self._extract_features(dummy)
-        return {name: tuple(feat.shape[1:]) for name, feat in features.items()}
-
-    def _extract_features(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
-        """
-        Run image through encoder and collect multi-scale features.
-
-        SAM3's image encoder (Hiera with FpnNeck) returns a dict with:
-          - "backbone_fpn": list of feature tensors from FPN levels
-          - "vision_pos_enc": list of positional encodings
-
-        We extract just the backbone_fpn features as our multi-scale outputs.
-        """
-        # The SAM3 image encoder's forward returns different structures
-        # depending on version. Handle both cases.
-        output = self.encoder(x)
-
-        if isinstance(output, dict):
-            # Standard SAM3 output: dict with "backbone_fpn" key
-            if "backbone_fpn" in output:
-                fpn_features = output["backbone_fpn"]
-                return {
-                    f"stage{i}": feat for i, feat in enumerate(fpn_features)
-                }
-            # Some versions return vision features directly
-            elif "vision_features" in output:
-                return {"stage0": output["vision_features"]}
-
-        if isinstance(output, (list, tuple)):
-            return {f"stage{i}": feat for i, feat in enumerate(output)}
-
-        if isinstance(output, torch.Tensor):
-            return {"stage0": output}
-
-        raise ValueError(
-            f"Unexpected encoder output type: {type(output)}. "
-            f"Keys: {output.keys() if hasattr(output, 'keys') else 'N/A'}"
-        )
-
-    def forward(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
-        """
-        Args:
-            x: input images [B, 3, H, W], ImageNet-normalised float32
-
-        Returns:
-            Dict of multi-scale features:
-              "stage0": highest resolution features
-              ...
-              "stageN": lowest resolution (deepest) features
-        """
-        if self._freeze:
-            with torch.no_grad():
-                features = self._extract_features(x)
-            # Detach to avoid graph issues but keep grad for downstream
-            return {k: v.detach() for k, v in features.items()}
-        else:
-            return self._extract_features(x)
-
-    @property
-    def num_stages(self) -> int:
-        """Number of feature stages (discovered on first forward pass)."""
-        return len(self.get_feature_info())
+            print("SAM3 package not installed. Using fallback architecture...")
+            
+            # 回退：使用簡單的 Vision Transformer
+            import timm
+            model = timm.create_model('vit_large_patch14_clip_336', pretrained=True)
+            return model
+    
+    def forward(self, x):
+        """Forward pass through the encoder."""
+        return self.encoder(x)
