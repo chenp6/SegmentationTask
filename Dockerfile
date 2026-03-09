@@ -35,13 +35,14 @@ RUN pip install --upgrade pip && \
         pycocotools \
         sentencepiece \
         protobuf \
-        roboflow
+        roboflow \
+        discord
 
 # Install SAM2 from source
 RUN pip install --no-cache-dir git+https://github.com/facebookresearch/sam2.git
 
 # 安裝 SAM3
-RUN pip install git+https://github.com/facebookresearch/sam3.git || echo "SAM3 not available, using fallback"
+RUN pip install --no-cache-dir git+https://github.com/facebookresearch/sam3.git || \
 
 # Copy project scripts only (data/output are mounted as volumes)
 COPY scripts/ /workspace/scripts/
