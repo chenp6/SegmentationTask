@@ -84,6 +84,43 @@ class SAM3Backbone(nn.Module):
             import timm
             return timm.create_model('vit_large_patch14_clip_336', pretrained=False)
     
+    @torch.no_grad()
+    def get_feature_info(self, image_size: int = 1024) -> dict:
+        """
+        Run a dummy forward pass to discover feature map shapes.
+        Returns dict: stage_name -> (C, H, W).
+        """
+        device = next(self.encoder.parameters()).device
+        dummy = torch.randn(1, 3, image_size, image_size, device=device)
+        features = self._extract_features(dummy)
+        return {name: tuple(feat.shape[1:]) for name, feat in features.items()}
+    
+    def _extract_features(self, x: torch.Tensor) -> dict:
+        """
+        Run image through encoder and collect multi-scale features.
+        
+        假設 SAM3 encoder 返回類似 SAM2 的格式。
+        """
+        output = self.encoder(x)
+        
+        if isinstance(output, dict):
+            # 如果返回 dict，直接使用
+            return output
+        elif isinstance(output, (list, tuple)):
+            # 如果返回 list/tuple，轉換為 dict
+            return {f"stage{i}": feat for i, feat in enumerate(output)}
+        elif isinstance(output, torch.Tensor):
+            # 如果返回單一 tensor
+            return {"stage0": output}
+        else:
+            raise ValueError(f"Unexpected encoder output type: {type(output)}")
+    
     def forward(self, x):
         """Forward pass through the encoder."""
-        return self.encoder(x)
+        if self.freeze:
+            with torch.no_grad():
+                features = self._extract_features(x)
+            # Detach to avoid graph issues
+            return {k: v.detach() for k, v in features.items()}
+        else:
+            return self._extract_features(x)
