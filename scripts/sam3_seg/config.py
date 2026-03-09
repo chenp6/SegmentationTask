@@ -4,6 +4,7 @@ Configuration for the SAM3 instance segmentation pipeline.
 Supports both UNet (center heatmap) and query-based (Mask2Former-lite) decoders.
 """
 from dataclasses import dataclass, field
+from typing import Optional
 
 
 @dataclass
@@ -19,7 +20,7 @@ class ModelConfig:
     sam3_checkpoint: str = None
     sam3_config_path: Optional[str] = None
     freeze: bool = True
-    
+
     # Adapter settings
     use_adapters: bool = True
     adapter_dim: int = 64
