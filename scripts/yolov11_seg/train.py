@@ -25,6 +25,8 @@ def main():
                        help="Number of epochs (overrides config)")
     parser.add_argument("--batch-size", type=int, default=None,
                        help="Batch size (overrides config)")
+    parser.add_argument("--workers", type=int, default=None,
+                       help="Dataloader workers for Ultralytics; use 0 in Docker if shm is limited")
     parser.add_argument("--from-scratch", action="store_true",
                        help="Initialize from YAML architecture instead of pretrained .pt weights")
     args = parser.parse_args()
@@ -41,6 +43,8 @@ def main():
         model_cfg.epochs = args.epochs
     if args.batch_size:
         model_cfg.batch_size = args.batch_size
+    if args.workers is not None:
+        train_cfg.workers = args.workers
     if args.from_scratch:
         model_cfg.pretrained = False
 
@@ -71,6 +75,7 @@ def main():
         "data": str(data_yaml),
         "epochs": model_cfg.epochs,
         "batch": model_cfg.batch_size,
+        "workers": train_cfg.workers,
         "imgsz": data_cfg.image_size,
         "patience": model_cfg.patience,
         "device": train_cfg.device,

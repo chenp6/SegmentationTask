@@ -21,6 +21,46 @@ Both evaluate using **COCO mAP50** via `pycocotools`.
 
 ## Quick Start (Docker)
 
+### What To Do
+
+If you just changed the Dockerfile and want to fix `ModuleNotFoundError: No module named 'ultralytics'`, run these commands in order:
+
+```bash
+# 1. Remove the old container if it exists
+docker rm -f seg_pipeline
+
+# 2. Rebuild the image so the new dependencies are installed
+docker build -t segmentation_pipeline:latest .
+
+# 3. Start a new container
+docker run -d \
+    --name seg_pipeline \
+    --gpus all \
+    --shm-size=8g \
+    -e NVIDIA_VISIBLE_DEVICES=all \
+    -e HF_HOME=/workspace/.cache/huggingface \
+    -v "$(pwd)/scripts:/workspace/scripts" \
+    -v "$(pwd)/data:/workspace/data" \
+    -v "$(pwd)/output:/workspace/output" \
+    -v "$(pwd)/hf_cache:/workspace/.cache/huggingface" \
+    -w /workspace \
+    segmentation_pipeline:latest \
+    tail -f /dev/null
+
+# 4. Confirm the container is running
+docker ps
+
+# 5. Confirm ultralytics is installed inside the container
+docker exec seg_pipeline python -c "from ultralytics import YOLO; print('ultralytics ok')"
+
+# 6. Start YOLOv11 training
+docker exec seg_pipeline python -m scripts.yolov11_seg.train
+```
+
+If step 5 fails, you are still using an old image or old container.
+If YOLOv11 fails with `unable to allocate shared memory(shm)`, keep `--shm-size=8g`
+and run with `workers=0` or `--workers 0`.
+
 ### 1. Build the Docker image
 
 ```bash
@@ -33,6 +73,7 @@ docker build -t segmentation_pipeline:latest .
 docker run -d \
     --name seg_pipeline \
     --gpus all \
+    --shm-size=8g \
     -e NVIDIA_VISIBLE_DEVICES=all \
     -e HF_HOME=/workspace/.cache/huggingface \
     -v "$(pwd)/scripts:/workspace/scripts" \
@@ -43,6 +84,39 @@ docker run -d \
     segmentation_pipeline:latest \
     tail -f /dev/null
 ```
+
+### 2a. Confirm the container is running
+
+```bash
+docker ps
+docker exec seg_pipeline python -c "from ultralytics import YOLO; print('ultralytics ok')"
+```
+
+### 2b. If YOLOv11 hits shared memory errors
+
+This error:
+
+```text
+RuntimeError: unable to allocate shared memory(shm)
+```
+
+usually means Docker shared memory is too small for multi-worker dataloading.
+
+Use both of these:
+
+```bash
+# Start container with larger shared memory
+docker run -d \
+    --name seg_pipeline \
+    --gpus all \
+    --shm-size=8g \
+    ...
+
+# Run YOLOv11 with safe dataloader worker count
+docker exec seg_pipeline python -m scripts.yolov11_seg.train --workers 0
+```
+
+The project default for YOLOv11 is now `workers=0` in Docker-safe mode.
 
 ### 3. Run a pipeline
 

@@ -37,6 +37,7 @@ class ModelConfig:
 class TrainConfig:
     # Device
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    workers: int = 0
 
     # Optimization
     lr0: float = 0.01
