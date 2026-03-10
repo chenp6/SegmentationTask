@@ -1,22 +1,19 @@
 """
-Configuration for YOLOv11 instance segmentation training with Roboflow dataset.
+Configuration for YOLOv11 instance segmentation training.
 
-Uses Ultralytics YOLOv11 for training on COCO-format segmentation data.
+Uses the same COCO dataset root as Mask2Former/SAM pipelines and derives a
+YOLO-seg dataset view locally.
 """
 import torch
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
 class DataConfig:
-    # Roboflow dataset configuration
-    roboflow_workspace: str = "your-workspace"
-    roboflow_project: str = "your-project"
-    roboflow_version: int = 1
-    roboflow_api_key: str = None  # Set via environment variable or config
-
-    # Local dataset paths (after download)
-    data_yaml_path: str = "data/roboflow_hospital/data.yaml"
+    # Same source dataset as mask2former/sam pipelines
+    data_root: str = "data/hospital_coco"
+    yolo_dataset_dir: str = "data/hospital_coco/yolo"
+    data_yaml_path: str = "data/hospital_coco/yolo/data.yaml"
     image_size: int = 640  # YOLOv11 default
 
 
@@ -25,6 +22,7 @@ class ModelConfig:
     # YOLOv11 model
     model_name: str = "yolo11n-seg.pt"  # nano version for segmentation
     pretrained: bool = True
+    scratch_model_cfg: str = "yolo11n-seg.yaml"
 
     # Training parameters
     epochs: int = 100

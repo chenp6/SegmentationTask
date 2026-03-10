@@ -1,6 +1,7 @@
 # YOLOv11 Segmentation Training with Roboflow
 
-This module provides training scripts for YOLOv11 instance segmentation using Roboflow datasets.
+This module provides training scripts for YOLOv11 instance segmentation using the
+same COCO dataset root as the Mask2Former pipeline.
 
 ## Setup
 
@@ -9,31 +10,37 @@ This module provides training scripts for YOLOv11 instance segmentation using Ro
 pip install -r requirements.txt
 ```
 
-2. Set up Roboflow API key:
-```bash
-export ROBOFLOW_API_KEY="your-api-key-here"
-```
-
-Or update `config.py` with your API key.
+2. Prepare the shared COCO dataset used by Mask2Former under `data/hospital_coco`.
 
 ## Configuration
 
 Edit `config.py` to set:
-- Roboflow workspace, project, and version
+- Shared dataset root (`data_root`)
 - Model size (yolo11n-seg.pt, yolo11s-seg.pt, etc.)
 - Training parameters
 
 ## Training
 
-### Option 1: Download and train
+### Train from the shared COCO dataset
 ```bash
-python -m scripts.yolov11_seg.train --download-data
+python -m scripts.yolov11_seg.train
 ```
 
-### Option 2: Use existing dataset
+### Use a different shared COCO dataset root
 ```bash
-python -m scripts.yolov11_seg.train --data-yaml path/to/data.yaml
+python -m scripts.yolov11_seg.train --data-root path/to/hospital_coco
 ```
+
+### Fine-tune from pretrained YOLOv11 segmentation weights
+```python
+from ultralytics import YOLO
+
+model = YOLO("yolo11n-seg.pt")
+model.train(data="data/hospital_coco/yolo/data.yaml", epochs=100, imgsz=640)
+```
+
+The training script will generate `data/hospital_coco/yolo/data.yaml` plus YOLO
+segmentation labels from the same COCO annotations used by Mask2Former.
 
 ## Evaluation
 
