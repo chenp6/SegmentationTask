@@ -40,7 +40,7 @@ RUN pip install --upgrade pip && \
         decord
 
 # Install SAM2 from source
-RUN pip install --no-cache-dir git+https://github.com/facebookresearch/sam2.git
+#RUN pip install --no-cache-dir git+https://github.com/facebookresearch/sam2.git
 
 # install SAM3
 RUN pip install --no-cache-dir git+https://github.com/facebookresearch/sam3.git || true
