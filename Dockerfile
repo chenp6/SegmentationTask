@@ -22,6 +22,7 @@ RUN pip install --upgrade pip && \
         transformers>=4.40.0 \
         peft>=0.9.0 \
         accelerate \
+        ultralytics>=8.3.0 \
         albumentations \
         torchmetrics \
         scipy \
@@ -36,13 +37,13 @@ RUN pip install --upgrade pip && \
         sentencepiece \
         protobuf \
         roboflow \
-        discord
+        decord
 
 # Install SAM2 from source
 RUN pip install --no-cache-dir git+https://github.com/facebookresearch/sam2.git
 
-# 安裝 SAM3
-RUN pip install --no-cache-dir git+https://github.com/facebookresearch/sam3.git || \
+# install SAM3
+RUN pip install --no-cache-dir git+https://github.com/facebookresearch/sam3.git || true
 
 # Copy project scripts only (data/output are mounted as volumes)
 COPY scripts/ /workspace/scripts/
@@ -56,4 +57,5 @@ ENV TRANSFORMERS_CACHE=/workspace/.cache/huggingface/transformers
 
 # Default: show help
 CMD ["echo", "Use: python -m scripts.mask2former_seg.train OR python -m scripts.sam2_seg.train"]
+
 
