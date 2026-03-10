@@ -132,6 +132,27 @@ docker exec seg_pipeline python -m scripts.sam2_seg.evaluate
 docker exec seg_pipeline python -m scripts.sam2_seg.visualize
 ```
 
+### 4. Evaluate YOLOv11
+
+After YOLOv11 training finishes, evaluate the best checkpoint with:
+
+```bash
+docker exec seg_pipeline python -m scripts.yolov11_seg.evaluate \
+    --model output/yolov11/exp/weights/best.pt \
+    --data data/hospital_coco/yolo/data.yaml \
+    --split test
+```
+
+If GPU memory is tight during evaluation:
+
+```bash
+docker exec seg_pipeline python -m scripts.yolov11_seg.evaluate \
+    --model output/yolov11/exp/weights/best.pt \
+    --data data/hospital_coco/yolo/data.yaml \
+    --split test \
+    --batch-size 4
+```
+
 ---
 
 ## Pipeline 1: Mask2Former
