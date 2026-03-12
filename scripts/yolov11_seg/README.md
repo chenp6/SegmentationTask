@@ -23,8 +23,10 @@ pip install -r scripts/yolov11_seg/requirements.txt
 python -m scripts.mask2former_seg.download_dataset \
   --output_dir /content/data/hospital_coco \
   --credentials /content/roboflow_credentials.json
+python -m scripts.yolov11_seg.prepare_dataset \
+  --data-root /content/data/hospital_coco
 python -m scripts.yolov11_seg.train \
-  --data-root /content/data/hospital_coco \
+  --data-yaml /content/data/hospital_coco/yolo/data.yaml \
   --workers 2
 ```
 
@@ -48,17 +50,32 @@ Edit `config.py` to set:
 
 ## Training
 
-### Train from the shared COCO dataset
+### 1. Prepare YOLO data.yaml and labels
+
 ```bash
-python -m scripts.yolov11_seg.train
+python -m scripts.yolov11_seg.prepare_dataset
 ```
 
 ### Use a different shared COCO dataset root
+
 ```bash
-python -m scripts.yolov11_seg.train --data-root path/to/hospital_coco
+python -m scripts.yolov11_seg.prepare_dataset --data-root path/to/hospital_coco
 ```
 
 For Colab, a typical path is `/content/data/hospital_coco`.
+
+This step generates `data/hospital_coco/yolo/data.yaml` plus YOLO segmentation
+labels from the same COCO annotations used by Mask2Former.
+
+### 2. Train from the prepared YAML
+```bash
+python -m scripts.yolov11_seg.train --data-yaml data/hospital_coco/yolo/data.yaml
+```
+
+### Or still train directly from the shared COCO dataset
+```bash
+python -m scripts.yolov11_seg.train --data-root path/to/hospital_coco
+```
 
 ### Fine-tune from pretrained YOLOv11 segmentation weights
 ```python
@@ -68,13 +85,12 @@ model = YOLO("yolo11n-seg.pt")
 model.train(data="data/hospital_coco/yolo/data.yaml", epochs=100, imgsz=640)
 ```
 
-The training script will generate `data/hospital_coco/yolo/data.yaml` plus YOLO
-segmentation labels from the same COCO annotations used by Mask2Former.
-
 ## Evaluation
 
 ```bash
-python -m scripts.yolov11_seg.evaluate --model output/yolov11/exp/weights/best.pt --data data.yaml
+python -m scripts.yolov11_seg.evaluate \
+  --model output/yolov11/exp/weights/best.pt \
+  --data data/hospital_coco/yolo/data.yaml
 ```
 
 ## Visualization
