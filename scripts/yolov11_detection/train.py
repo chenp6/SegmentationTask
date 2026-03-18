@@ -18,6 +18,7 @@ def main() -> None:
     parser.add_argument("--data-yaml", type=str, default=None, help="Path to an existing YOLO data.yaml")
     parser.add_argument("--data-root", type=str, default=None, help="Original COCO detection dataset root")
     parser.add_argument("--model", type=str, default=None, help="Model name/weights path, e.g. yolo11n.pt")
+    parser.add_argument("--output-dir", type=str, default=None, help="Directory to save trained model outputs")
     parser.add_argument("--epochs", type=int, default=None, help="Number of epochs")
     parser.add_argument("--batch-size", type=int, default=None, help="Batch size")
     parser.add_argument("--imgsz", type=int, default=None, help="Input image size for train/val/test resize")
@@ -43,6 +44,8 @@ def main() -> None:
 
     if args.model:
         model_cfg.model_name = args.model
+    if args.output_dir:
+        model_cfg.output_dir = args.output_dir
     if args.epochs:
         model_cfg.epochs = args.epochs
     if args.batch_size:
