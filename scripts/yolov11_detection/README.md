@@ -92,6 +92,9 @@ python -m scripts.yolov11_detection.train --model yolo11s.pt --epochs 100 --batc
 - `--batch-size`
   預設：`None`
   不指定時，會回退到 `config.py` 內的 `16`
+- `--imgsz`
+  預設：`None`
+  不指定時，會回退到 `config.py` 內的 `640`
 - `--workers`
   預設：`None`
   不指定時，會回退到 `config.py` 內的 `0`
@@ -120,6 +123,13 @@ python -m scripts.yolov11_detection.train ^
 ```bash
 python -m scripts.yolov11_detection.train ^
   --batch-size 8
+```
+
+修改 resize 輸入尺寸：
+
+```bash
+python -m scripts.yolov11_detection.train ^
+  --imgsz 960
 ```
 
 提高 dataloader workers：
@@ -152,12 +162,13 @@ python -m scripts.yolov11_detection.train ^
 
 ### Data Augmentation 參數範例
 
-如果之後你想把 data augmentation 參數改成從 CLI 傳入，可以採用這種 args 風格：
+目前 `train.py` 已支援從 CLI 傳入這批 augmentation 參數：
 
 ```bash
 python -m scripts.yolov11_detection.train ^
   --epochs 100 ^
   --batch-size 16 ^
+  --imgsz 640 ^
   --hsv-h 0.015 ^
   --hsv-s 0.3 ^
   --hsv-v 0.15 ^
@@ -172,8 +183,26 @@ python -m scripts.yolov11_detection.train ^
   --mixup 0.05
 ```
 
-目前 `scripts.yolov11_detection.train` 還沒有實作這批 augmentation CLI 參數；
-現在若要調整 augmentation，請先修改 `config.py` 內的設定值。
+若想先用比較保守的 baseline，可以從這組開始：
+
+```bash
+python -m scripts.yolov11_detection.train ^
+  --epochs 100 ^
+  --batch-size 16 ^
+  --imgsz 640 ^
+  --hsv-h 0.015 ^
+  --hsv-s 0.3 ^
+  --hsv-v 0.15 ^
+  --degrees 10 ^
+  --translate 0.1 ^
+  --scale 0.2 ^
+  --shear 3 ^
+  --perspective 0.0 ^
+  --flipud 0.0 ^
+  --fliplr 0.5 ^
+  --mosaic 0.5 ^
+  --mixup 0.0
+```
 
 ## 3. 評估
 
@@ -214,7 +243,18 @@ python -m scripts.yolov11_detection.visualize ^
 - `val/test` 時，也會自動做相同類型的尺寸調整
 - 所以你不需要自己手動修改原始 annotation
 
-只有在你「先離線把原始圖片改尺寸並存成新資料集」的情況下，才需要同步改 annotation。
+如果你想改 resize，大致有兩種方式：
+
+- 改 [config.py](/c:/Users/B50137/Downloads/chenp6/SegmentationTask/scripts/yolov11_detection/config.py) 的 `image_size`
+- 或訓練時直接加 `--imgsz`
+
+例如：
+
+```bash
+python -m scripts.yolov11_detection.train --imgsz 960
+```
+
+只有在你先離線把原始圖片改尺寸並存成新資料集時，才需要同步修改 annotation。
 
 ## 檔案說明
 

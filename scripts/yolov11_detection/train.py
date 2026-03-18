@@ -20,6 +20,7 @@ def main() -> None:
     parser.add_argument("--model", type=str, default=None, help="Model name/weights path, e.g. yolo11n.pt")
     parser.add_argument("--epochs", type=int, default=None, help="Number of epochs")
     parser.add_argument("--batch-size", type=int, default=None, help="Batch size")
+    parser.add_argument("--imgsz", type=int, default=None, help="Input image size for train/val/test resize")
     parser.add_argument("--workers", type=int, default=None, help="Ultralytics dataloader workers")
     parser.add_argument("--hsv-h", type=float, default=None, help="HSV hue augmentation strength")
     parser.add_argument("--hsv-s", type=float, default=None, help="HSV saturation augmentation strength")
@@ -46,6 +47,8 @@ def main() -> None:
         model_cfg.epochs = args.epochs
     if args.batch_size:
         model_cfg.batch_size = args.batch_size
+    if args.imgsz is not None:
+        data_cfg.image_size = args.imgsz
     if args.workers is not None:
         train_cfg.workers = args.workers
     if args.hsv_h is not None:
