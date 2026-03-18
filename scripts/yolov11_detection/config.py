@@ -51,17 +51,17 @@ class TrainConfig:
     weight_decay: float = 0.0005
 
     # Augmentation.
-    hsv_h: float = 0.015
-    hsv_s: float = 0.7
+    hsv_h: float = 0
+    hsv_s: float = 0
     hsv_v: float = 0.4
     degrees: float = 0.0
-    translate: float = 0.1
-    scale: float = 0.5
+    translate: float = 0.0
+    scale: float = 0.0
     shear: float = 0.0
     perspective: float = 0.0
     flipud: float = 0.0
     fliplr: float = 0.5
-    mosaic: float = 1.0
+    mosaic: float = 0.0
     mixup: float = 0.0
 
     # Logging.
