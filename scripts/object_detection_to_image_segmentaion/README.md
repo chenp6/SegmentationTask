@@ -136,8 +136,3 @@ python -m scripts.object_detection_to_image_segmentaion.convert_coco_detection_t
 
 確認 `_annotations.coco.json` 和 mask 品質沒問題，再跑完整資料集。
 
-## 注意事項
-
-- 用 bbox prompt 產生的 mask 很適合當 bootstrap dataset，但通常還是建議抽樣人工檢查
-- 若某些框太鬆或遮擋嚴重，SAM2 可能失敗；目前腳本可選擇回退成 box polygon 或直接跳過
-- 如果你後續要接 Ultralytics YOLO-seg，`polygon` 格式通常會比 `rle` 更方便
