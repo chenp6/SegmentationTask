@@ -75,6 +75,10 @@ python -m scripts.yolov11_detection.train
 python -m scripts.yolov11_detection.train --model yolo11s.pt --epochs 100 --batch-size 16
 ```
 
+```bash
+python -m scripts.yolov11_detection.train --output-dir output/custom_yolov11_detection
+```
+
 ### `train.py` 目前支援的常用 CLI 參數
 
 - `--data-yaml`
@@ -109,6 +113,11 @@ python -m scripts.yolov11_detection.train --model yolo11s.pt --epochs 100 --batc
 ```bash
 python -m scripts.yolov11_detection.train ^
   --model yolo11s.pt
+```
+
+```bash
+python -m scripts.yolov11_detection.train ^
+  --output-dir output/custom_yolov11_detection
 ```
 
 增加訓練回合：
