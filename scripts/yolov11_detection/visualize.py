@@ -231,7 +231,7 @@ def main() -> None:
     print(f"Total detections: {total_detections}")
 
     if args.save:
-        print("Prediction images/videos were saved by Ultralytics under runs/detect/")
+        print("Prediction images/videos were saved to the Ultralytics output directory shown above.")
 
 
 if __name__ == "__main__":

@@ -79,6 +79,9 @@ python -m scripts.yolov11_detection.train --model yolo11s.pt --epochs 100 --batc
 python -m scripts.yolov11_detection.train --output-dir output/custom_yolov11_detection
 ```
 
+`--output-dir` 現在就是最終實驗資料夾，訓練結果會直接寫到
+`output/custom_yolov11_detection/`，其中包含 `results.csv` 與 `weights/best.pt`。
+
 ### `train.py` 目前支援的常用 CLI 參數
 
 - `--data-yaml`

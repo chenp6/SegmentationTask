@@ -13,6 +13,12 @@ from .config import DataConfig, ModelConfig, TrainConfig
 from .dataset import build_yolo_dataset_from_coco
 
 
+def resolve_ultralytics_save_args(output_dir: str) -> tuple[str, str]:
+    # Treat output_dir as the final experiment directory instead of a project root.
+    resolved_dir = Path(output_dir).resolve()
+    return str(resolved_dir.parent), resolved_dir.name
+
+
 def main():
     parser = argparse.ArgumentParser(description="Train YOLOv11 on the shared COCO dataset")
     parser.add_argument("--data-yaml", type=str, default=None,
@@ -21,6 +27,8 @@ def main():
                        help="COCO dataset root shared with mask2former, e.g. data/hospital_coco")
     parser.add_argument("--model", type=str, default=None,
                        help="Model name/size (overrides config)")
+    parser.add_argument("--output-dir", type=str, default=None,
+                       help="Directory to save trained model outputs")
     parser.add_argument("--epochs", type=int, default=None,
                        help="Number of epochs (overrides config)")
     parser.add_argument("--batch-size", type=int, default=None,
@@ -39,6 +47,8 @@ def main():
     # Override with command line args
     if args.model:
         model_cfg.model_name = args.model
+    if args.output_dir:
+        model_cfg.output_dir = args.output_dir
     if args.epochs:
         model_cfg.epochs = args.epochs
     if args.batch_size:
@@ -70,6 +80,7 @@ def main():
     else:
         model = YOLO(model_cfg.scratch_model_cfg)
 
+    project_dir, run_name = resolve_ultralytics_save_args(model_cfg.output_dir)
     # Training configuration
     train_args = {
         "data": str(data_yaml),
@@ -96,8 +107,8 @@ def main():
         "mosaic": train_cfg.mosaic,
         "mixup": train_cfg.mixup,
         "save_period": train_cfg.save_period,
-        "project": model_cfg.output_dir,
-        "name": train_cfg.name,
+        "project": project_dir,
+        "name": run_name,
         "val": train_cfg.val,
         "split": train_cfg.split,
     }

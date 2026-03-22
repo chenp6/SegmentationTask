@@ -13,6 +13,12 @@ from .config import DataConfig, ModelConfig, TrainConfig
 from .dataset import build_yolo_dataset_from_coco_detection
 
 
+def resolve_ultralytics_save_args(output_dir: str) -> tuple[str, str]:
+    # Treat output_dir as the final experiment directory instead of a project root.
+    resolved_dir = Path(output_dir).resolve()
+    return str(resolved_dir.parent), resolved_dir.name
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train YOLOv11 object detection on the original COCO dataset")
     parser.add_argument("--data-yaml", type=str, default=None, help="Path to an existing YOLO data.yaml")
@@ -101,6 +107,7 @@ def main() -> None:
     else:
         model = YOLO(model_cfg.scratch_model_cfg)
 
+    project_dir, run_name = resolve_ultralytics_save_args(model_cfg.output_dir)
     train_args = {
         "data": str(data_yaml),
         "epochs": model_cfg.epochs,
@@ -126,8 +133,8 @@ def main() -> None:
         "mosaic": train_cfg.mosaic,
         "mixup": train_cfg.mixup,
         "save_period": train_cfg.save_period,
-        "project": model_cfg.output_dir,
-        "name": train_cfg.name,
+        "project": project_dir,
+        "name": run_name,
         "val": train_cfg.val,
         "split": train_cfg.split,
     }

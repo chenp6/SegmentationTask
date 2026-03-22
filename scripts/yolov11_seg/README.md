@@ -72,6 +72,14 @@ labels from the same COCO annotations used by Mask2Former.
 python -m scripts.yolov11_seg.train --data-yaml data/hospital_coco/yolo/data.yaml
 ```
 
+### Save directly into a chosen experiment directory
+
+```bash
+python -m scripts.yolov11_seg.train \
+  --data-yaml data/hospital_coco/yolo/data.yaml \
+  --output-dir output/yolov11_seg/exp1
+```
+
 ### Or still train directly from the shared COCO dataset
 ```bash
 python -m scripts.yolov11_seg.train --data-root path/to/hospital_coco
@@ -89,14 +97,14 @@ model.train(data="data/hospital_coco/yolo/data.yaml", epochs=100, imgsz=640)
 
 ```bash
 python -m scripts.yolov11_seg.evaluate \
-  --model output/yolov11/exp/weights/best.pt \
+  --model output/yolov11_seg/exp1/weights/best.pt \
   --data data/hospital_coco/yolo/data.yaml
 ```
 
 ## Visualization
 
 ```bash
-python -m scripts.yolov11_seg.visualize --model output/yolov11/exp/weights/best.pt --source data/test/images --max-images 10
+python -m scripts.yolov11_seg.visualize --model output/yolov11_seg/exp1/weights/best.pt --source data/test/images --max-images 10
 ```
 
 ## Notes
