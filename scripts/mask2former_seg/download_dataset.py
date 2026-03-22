@@ -4,7 +4,6 @@ Download hospital segmentation dataset from Roboflow using API v1 in COCO format
 Usage:
     python -m scripts.mask2former_seg.download_dataset
 """
-import argparse
 import json
 import os
 import urllib.request
@@ -14,50 +13,9 @@ from pathlib import Path
 CREDENTIALS_FILE = "roboflow_credentials.json"
 
 
-def _clean_dict(values: dict) -> dict:
-    return {key: value for key, value in values.items() if value not in (None, "")}
-
-
-def load_credentials(credentials_file: str | None = None, cli_overrides: dict | None = None) -> dict:
-    cli_overrides = _clean_dict(cli_overrides or {})
-
-    env_creds = _clean_dict(
-        {
-            "ROBOFLOW_API_KEY": os.getenv("ROBOFLOW_API_KEY"),
-            "ROBOFLOW_WORKSPACE": os.getenv("ROBOFLOW_WORKSPACE"),
-            "ROBOFLOW_PROJECT": os.getenv("ROBOFLOW_PROJECT"),
-            "ROBOFLOW_VERSION": os.getenv("ROBOFLOW_VERSION"),
-            "ROBOFLOW_API_URL": os.getenv("ROBOFLOW_API_URL"),
-        }
-    )
-
-    candidate_paths = []
-    if credentials_file:
-        candidate_paths.append(Path(credentials_file))
-    env_credentials_path = os.getenv("ROBOFLOW_CREDENTIALS_FILE")
-    if env_credentials_path:
-        candidate_paths.append(Path(env_credentials_path))
-    candidate_paths.append(Path(CREDENTIALS_FILE))
-
-    file_creds = {}
-    for candidate in candidate_paths:
-        if candidate.exists():
-            with candidate.open("r", encoding="utf-8") as f:
-                file_creds = json.load(f)
-            break
-
-    creds = {}
-    creds.update(file_creds)
-    creds.update(env_creds)
-    creds.update(cli_overrides)
-
-    if "ROBOFLOW_API_KEY" not in creds:
-        raise FileNotFoundError(
-            "Roboflow credentials not found. Provide --credentials, set "
-            "ROBOFLOW_CREDENTIALS_FILE, or export ROBOFLOW_API_KEY/WORKSPACE/PROJECT."
-        )
-
-    return creds
+def load_credentials() -> dict:
+    with open(CREDENTIALS_FILE) as f:
+        return json.load(f)
 
 
 def get_download_url(creds: dict) -> str:
@@ -81,11 +39,7 @@ def get_download_url(creds: dict) -> str:
     return url
 
 
-def download_dataset(
-    output_dir: str = "data/hospital_coco",
-    credentials_file: str | None = None,
-    cli_overrides: dict | None = None,
-) -> str:
+def download_dataset(output_dir: str = "data/hospital_coco") -> str:
     """
     Download the dataset from Roboflow and unzip to output_dir.
     Handles the async export flow: keeps polling until the link is ready.
@@ -94,7 +48,7 @@ def download_dataset(
     import time
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    creds = load_credentials(credentials_file=credentials_file, cli_overrides=cli_overrides)
+    creds = load_credentials()
     url = get_download_url(creds)
 
     print(f"Fetching Roboflow dataset link...")
@@ -153,26 +107,8 @@ def download_dataset(
 
 
 if __name__ == "__main__":
+    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--output_dir", default="data/hospital_coco")
-    parser.add_argument("--credentials", default=None,
-                        help="Path to roboflow_credentials.json. Useful in Colab.")
-    parser.add_argument("--api-key", default=None,
-                        help="Override Roboflow API key without a credentials file.")
-    parser.add_argument("--workspace", default=None,
-                        help="Override Roboflow workspace slug.")
-    parser.add_argument("--project", default=None,
-                        help="Override Roboflow project slug.")
-    parser.add_argument("--version", default=None,
-                        help="Override Roboflow dataset version.")
     args = parser.parse_args()
-    download_dataset(
-        output_dir=args.output_dir,
-        credentials_file=args.credentials,
-        cli_overrides={
-            "ROBOFLOW_API_KEY": args.api_key,
-            "ROBOFLOW_WORKSPACE": args.workspace,
-            "ROBOFLOW_PROJECT": args.project,
-            "ROBOFLOW_VERSION": args.version,
-        },
-    )
+    download_dataset(args.output_dir)
