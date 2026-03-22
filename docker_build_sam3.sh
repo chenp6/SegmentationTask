@@ -1,19 +1,19 @@
 #!/bin/bash
-# Build and start the DGX Spark Docker container for Mask2Former pipeline
+# Build and start the Docker container for SAM3 segmentation pipeline
 set -e
 
-IMAGE_NAME="mask2former_seg"
-CONTAINER_NAME="mask2former_seg"
+IMAGE_NAME="sam3_seg"
+CONTAINER_NAME="sam3_seg"
 
 # Remove any existing container with same name
 docker rm -f ${CONTAINER_NAME} 2>/dev/null && echo "Removed existing container" || true
 
-echo "=== Building Mask2Former Docker Image (DGX Spark) ==="
+echo "=== Building SAM3 Docker Image ==="
 docker build -t ${IMAGE_NAME}:latest .
 
 echo ""
 echo "=== Starting Container ==="
-mkdir -p hf_cache output/mask2former data/hospital_coco
+mkdir -p hf_cache output/sam3 data/hospital_coco
 
 docker run -d \
     --name ${CONTAINER_NAME} \
@@ -33,11 +33,8 @@ echo ""
 echo "=== Container '${CONTAINER_NAME}' is running! ==="
 echo ""
 echo "Quick commands:"
-echo "  # Download dataset"
-echo "  docker exec ${CONTAINER_NAME} python -m scripts.mask2former_seg.download_dataset"
+echo "  # Train SAM3"
+echo "  docker exec ${CONTAINER_NAME} python -m scripts.sam3_seg.train"
 echo ""
-echo "  # Train"
-echo "  docker exec ${CONTAINER_NAME} python -m scripts.mask2former_seg.train"
-echo ""
-echo "  # Evaluate (after training)"
-echo "  docker exec ${CONTAINER_NAME} python -m scripts.mask2former_seg.evaluate"
+echo "  # Evaluate"
+echo "  docker exec ${CONTAINER_NAME} python -m scripts.sam3_seg.evaluate --checkpoint output/sam3/best_model.pth"
