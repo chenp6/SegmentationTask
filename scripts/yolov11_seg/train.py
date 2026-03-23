@@ -2,7 +2,23 @@
 Train YOLOv11 segmentation model using Ultralytics on the shared COCO dataset.
 
 Usage:
-    python -m scripts.yolov11_seg.train
+python -m scripts.yolov11_seg.train  \
+  --data-root data/medbin_dataset  \
+  --epochs 120  \
+  --batch-size 16  \
+  --imgsz 960  \
+  --hsv-h 0.01  \
+  --hsv-s 0.2  \
+  --hsv-v 0.15  \
+  --degrees 5  \
+  --translate 0.08  \
+  --scale 0.15  \
+  --shear 2  \
+  --perspective 0.0  \
+  --flipud 0.0  \
+  --fliplr 0.5  \
+  --mosaic 0.2  \
+  --mixup 0.0
 """
 import argparse
 from pathlib import Path

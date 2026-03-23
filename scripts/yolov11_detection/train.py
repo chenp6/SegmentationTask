@@ -2,7 +2,17 @@
 Train YOLOv11 object detection using Ultralytics on the original COCO dataset.
 
 Usage:
-    python -m scripts.yolov11_detection.train
+python -m scripts.yolov11_detection.train \
+  --epochs 100 \
+  --data-root data/hiod_coco_tiled \
+  --batch-size 16 \
+  --imgsz 1280 \
+  --output-dir output/hiod_coco_tiled/yolov11_detection \
+  --shear 15 \
+  --degrees 15 \
+  --scale 0.2 \
+  --hsv-v 0.25 \
+  --workers 2
 """
 import argparse
 from pathlib import Path
