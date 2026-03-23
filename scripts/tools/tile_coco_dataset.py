@@ -16,23 +16,27 @@ Output layout:
       train/_annotations.coco.json
       train/*.jpg|png
       valid/_annotations.coco.json
+      valid/*.jpg|png
       test/_annotations.coco.json
+      test/*.jpg|png
 
 Example:
     python -m scripts.tools.tile_coco_dataset \
-      --input-root data/medbin_dataset \
-      --output-root data/medbin_dataset_tiled \
-      --tile-width 1280 \
-      --tile-height 1280 \
-      --stride-x 960 \
-      --stride-y 960 \
-      --splits train valid test
+      --input-root data/hiod_coco \
+      --output-root data/hiod_coco_tiled \
+      --tile-width 896 \
+      --tile-height 896 \
+      --stride-x 640 \
+      --stride-y 640 \
+      --splits train \
+      --copy-unprocessed-splits
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from pathlib import Path
 from typing import Dict, Iterable, List
 
@@ -182,6 +186,30 @@ def tile_image(image: Image.Image, tile_x: int, tile_y: int, tile_w: int, tile_h
     # 依指定視窗從原圖裁出一個 tile。
     # Crop one tile window from the source image.
     return image.crop((tile_x, tile_y, tile_x + tile_w, tile_y + tile_h))
+
+
+def copy_split_without_tiling(split: str, input_root: Path, output_root: Path) -> None:
+    # 將未指定 tile 的 split 原樣複製到輸出資料夾，包含 annotation 與影像。
+    # Copy an untouched split into the output root, including annotations and images.
+    src_split_dir = input_root / split
+    ann_path = src_split_dir / "_annotations.coco.json"
+    if not ann_path.exists():
+        return
+
+    dst_split_dir = output_root / split
+    dst_split_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ann_path, dst_split_dir / "_annotations.coco.json")
+
+    copied_images = 0
+    for image_path in src_split_dir.iterdir():
+        if image_path.suffix.lower() not in IMAGE_EXTENSIONS:
+            continue
+        shutil.copy2(image_path, dst_split_dir / image_path.name)
+        copied_images += 1
+
+    print(f"\n[{split}] copied without tiling")
+    print(f"  images copied: {copied_images}")
+    print(f"  output:        {dst_split_dir}")
 
 
 def build_tiled_annotation(
@@ -370,6 +398,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-bbox-area", type=float, default=4.0, help="Drop tiled annotations smaller than this bbox area")
     parser.add_argument("--min-mask-area", type=int, default=4, help="Drop tiled segmentation masks smaller than this pixel area")
     parser.add_argument("--keep-empty-tiles", action="store_true", help="Keep tiles with no annotations")
+    parser.add_argument("--copy-unprocessed-splits", action="store_true", help="Copy splits not listed in --splits without tiling")
     parser.add_argument("--segmentation-format", choices=["polygon", "rle"], default="polygon", help="Output format for segmentation annotations")
     parser.add_argument("--image-format", choices=["jpg", "png"], default="jpg", help="Image format for tiled crops")
     return parser.parse_args()
@@ -416,6 +445,17 @@ def main() -> None:
             segmentation_format=args.segmentation_format,
             image_format=args.image_format,
         )
+
+    if args.copy_unprocessed_splits:
+        # 若只想 tile 部分 split（例如 train），這裡會把其餘 split
+        # 直接原樣複製到 output_root，讓整個資料集結構保持完整。
+        # If only some splits are tiled (for example train only), copy the
+        # remaining splits through unchanged so the output dataset stays complete.
+        requested_splits = set(args.splits)
+        for split in ["train", "valid", "test"]:
+            if split in requested_splits:
+                continue
+            copy_split_without_tiling(split=split, input_root=input_root, output_root=output_root)
 
 
 if __name__ == "__main__":
