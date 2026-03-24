@@ -43,8 +43,8 @@ def main() -> None:
         description="Check image resolutions in a folder"
     )
     parser.add_argument("--input-dir", required=True, help="Image input folder path")
-    parser.add_argument("--first", type=int, required=True, help="Target width",default=1920)
-    parser.add_argument("--second", type=int, required=True, help="Target height",default=1080)
+    parser.add_argument("--first", type=int,help="Target width",default=1920)
+    parser.add_argument("--second", type=int, help="Target height",default=1080)
     args = parser.parse_args()
 
     root = Path(args.input_dir)
