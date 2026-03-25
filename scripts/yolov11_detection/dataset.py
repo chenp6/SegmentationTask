@@ -20,7 +20,7 @@ def load_coco(ann_path: Path) -> dict:
 
 def _category_metadata(
     categories: List[dict],
-    preserve_category_ids: bool = False,
+    preserve_category_ids: bool = True,
 ) -> Tuple[Dict[int, int], List[str]]:
     sorted_cats = sorted(categories, key=lambda c: c["id"])
 
@@ -109,7 +109,7 @@ def build_yolo_dataset_from_coco_detection(
     coco_root: str | Path,
     output_root: str | Path | None = None,
     output_yaml: str = "data.yaml",
-    preserve_category_ids: bool = False,
+    preserve_category_ids: bool = True,
 ) -> Path:
     """
     Convert the original COCO detection dataset into a YOLO detection dataset.

@@ -117,6 +117,7 @@ def main():
         data_yaml = build_yolo_dataset_from_coco(
             coco_root=data_cfg.data_root,
             output_root=data_cfg.yolo_dataset_dir,
+            preserve_category_ids=True,
         )
 
     print(f"Using data.yaml: {data_yaml}")
