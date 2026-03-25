@@ -6,7 +6,7 @@ python -m scripts.yolov11_seg.train  \
   --data-root data/medbin_dataset  \
   --epochs 120  \
   --batch-size 16  \
-  --imgsz 960  \
+  --imgsz 640  \
   --hsv-h 0.01  \
   --hsv-s 0.2  \
   --hsv-v 0.15  \
@@ -18,7 +18,7 @@ python -m scripts.yolov11_seg.train  \
   --flipud 0.0  \
   --fliplr 0.5  \
   --mosaic 0.2  \
-  --mixup 0.0
+  --mixup 0.0 
 """
 import argparse
 from pathlib import Path
@@ -106,7 +106,7 @@ def main():
 
     if args.data_root:
         data_cfg.data_root = args.data_root
-        data_cfg.yolo_dataset_dir = str(Path(args.data_root) / "yolo")
+        data_cfg.yolo_dataset_dir = str(Path(args.data_root) / "yolo_segmentation")
         data_cfg.data_yaml_path = str(Path(data_cfg.yolo_dataset_dir) / "data.yaml")
 
     # Handle dataset
