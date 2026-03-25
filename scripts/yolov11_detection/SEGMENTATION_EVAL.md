@@ -11,7 +11,7 @@ using each predicted bbox as a SAM2 box prompt, then running COCO `segm` evaluat
 ```bash
 python -m scripts.yolov11_detection.evaluate_segmentation \
   --model output/medbin_dataset/yolov11_detection/exp/weights/best.pt \
-  --input-root data/hiod_sam2_seg \
+  --input-root data/medbin_dataset \
   --split test
 ```
 
@@ -20,7 +20,7 @@ python -m scripts.yolov11_detection.evaluate_segmentation \
 ```bash
 python -m scripts.yolov11_detection.evaluate_segmentation \
   --model output/medbin_dataset/yolov11_detection/exp/weights/best.pt \
-  --input-root data/hiod_sam2_seg \
+  --input-root data/medbin_dataset \
   --split test \
   --pred-json-out output/yolov11_detection/segmentation_predictions_test.json
 ```
@@ -56,7 +56,7 @@ COCO segmentation dataset 的根目錄。程式會預期資料結構中包含
 Example:
 
 ```bash
---input-root data/hiod_sam2_seg
+--input-root data/medbin_dataset
 ```
 
 ### `--split`
