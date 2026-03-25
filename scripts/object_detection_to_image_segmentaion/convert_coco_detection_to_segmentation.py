@@ -412,7 +412,7 @@ def main() -> None:
     parser.add_argument("--input-root", required=True, help="COCO detection dataset root")
     parser.add_argument("--output-root", required=True, help="Output COCO segmentation root")
     parser.add_argument("--splits", nargs="+", default=["train", "valid", "test"])
-    parser.add_argument("--sam2-model-id", default="facebook/sam2.1-hiera-large")
+    parser.add_argument("--sam2-model-id", default="facebook/sam2.1-hiera-tiny")
     parser.add_argument("--sam2-checkpoint", default=None, help="Optional local SAM2 checkpoint")
     parser.add_argument("--sam2-config", default=None, help="Optional local SAM2 config")
     parser.add_argument("--device", default=None, help="cuda / cpu; default auto")

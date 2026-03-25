@@ -293,7 +293,7 @@ def main() -> None:
     parser.add_argument("--max-det", type=int, default=100, help="Maximum detections per image")
     parser.add_argument("--imgsz", type=int, required=True, help="Resize image size used during YOLO inference")
     parser.add_argument("--device", default="cuda", help="cuda / cpu")
-    parser.add_argument("--sam2-model-id", default="facebook/sam2.1-hiera-large")
+    parser.add_argument("--sam2-model-id", default="facebook/sam2.1-hiera-tiny")
     parser.add_argument("--sam2-checkpoint", default=None, help="Optional local SAM2 checkpoint")
     parser.add_argument("--sam2-config", default=None, help="Optional local SAM2 config")
     parser.add_argument("--box-pad-ratio", type=float, default=0.0, help="Expand predicted bbox before SAM2 prompt")
