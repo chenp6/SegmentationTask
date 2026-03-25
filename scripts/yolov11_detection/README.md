@@ -52,6 +52,9 @@ Step 4.a. 評估訓練完成的模型：
 # Step 4.b. (For Segmentation) Combine with SAM2 and evaluate the trained model
 Step 4.b.（用於分割評估）結合 SAM2 來評估已訓練模型
 ```bash
+pip install git+https://github.com/facebookresearch/sam2.git
+```
+```bash
 python -m scripts.yolov11_detection.evaluate_segmentation \
   --model <MODEL_PATH> \
   --sam2-model-id <SAM2_VERSION> \
