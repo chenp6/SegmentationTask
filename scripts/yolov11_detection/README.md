@@ -1,4 +1,3 @@
-"""
 Example pipeline for YOLOv11 object detection.
 YOLOv11 物件偵測範例流程。
 
@@ -6,13 +5,16 @@ This workflow includes:
 1. Downloading a Roboflow dataset in COCO format
 2. Preparing the dataset for YOLO detection training
 3. Training a YOLOv11 detection model
-4. Evaluating the trained model
+4. a. Evaluating the trained model b.Combining YOLO detection with SAM2 for segmentation evaluation
+5. Visualizing predictions or YOLO ground truth
 
 此流程包含：
 1. 從 Roboflow 下載 COCO 格式資料集
 2. 準備 YOLO detection 訓練資料
 3. 訓練 YOLOv11 detection 模型
-4. 評估訓練完成的模型
+4. a.評估訓練完成的Object detection模型 b.串接 SAM2 進行 segmentation 評估
+5. 視覺化 prediction 或 YOLO ground truth
+
 
 # Step 1. Download dataset from Roboflow:
 Step 1. 從 Roboflow 下載資料集：
@@ -110,6 +112,11 @@ python -m scripts.yolov11_detection.visualize \
   --save \
   --output-dir output/yolov11_detection_gt
 ```
+Notes:
+- Prediction mode uses the trained YOLO model to draw predicted boxes on images.
+- Ground-truth mode does not load model weights. It reads `data.yaml` and YOLO label `.txt` files, then draws the annotated boxes directly from the dataset.
+- `--save` writes rendered images to disk.
+- `--show` opens an OpenCV window for interactive viewing.
 
 Notes:
 注意事項：
@@ -123,4 +130,4 @@ Notes:
 - `--show` opens an OpenCV window for interactive viewing.
 - `--save` 會把結果圖片輸出到磁碟。
 - `--show` 會開啟 OpenCV 視窗做互動式檢視。
-"""
+
