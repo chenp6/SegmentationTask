@@ -167,6 +167,9 @@ def extract_split(
         for ann in grouped_annotations.get(image_id, []):
             # crowd 標註通常不是單一乾淨 instance，不適合直接輸出成單張 PNG。
             if ann.get("iscrowd", 0):
+                print(
+                    "Warning: iscrowd : 1. Skipping this image."
+                )                
                 skipped_count += 1
                 continue
 
@@ -179,6 +182,9 @@ def extract_split(
             mask_area = int(mask.sum())
             # 太小的 mask 可能只是噪聲或幾乎看不見，依設定直接略過。
             if mask_area < min_mask_area:
+                print(
+                   f"Warning: min_mask_area < {min_mask_area}. Skipping this image."
+                )          
                 skipped_count += 1
                 continue
 
