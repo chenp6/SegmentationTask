@@ -183,13 +183,16 @@ def extract_split(
             # 太小的 mask 可能只是噪聲或幾乎看不見，依設定直接略過。
             if mask_area < min_mask_area:
                 print(
-                   f"Warning: min_mask_area < {min_mask_area}. Skipping this image."
+                   f"Warning: min_mask_area < {min_mask_area} for {image_info['file_name']}. Skipping this image."
                 )          
                 skipped_count += 1
                 continue
 
             box = mask_to_xyxy(mask)
             if box is None:
+                print(
+                   f"Warning: No valid front-scene for {image_info['file_name']}. Skipping this image."
+                )                 
                 skipped_count += 1
                 continue
 
