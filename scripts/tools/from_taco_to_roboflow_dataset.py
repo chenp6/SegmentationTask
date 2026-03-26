@@ -60,8 +60,10 @@ def main() -> None:
                 old_id = img["id"]
                 new_id = old_id + img_id_offset
                 img_id_map[old_id] = new_id
-
                 img["id"] = new_id
+
+                old_filename = img["file_name"]
+                img["file_name"] = "../"+old_filename
                 merged["images"].append(img)
 
             # annotations
