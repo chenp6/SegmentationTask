@@ -62,22 +62,10 @@ def main() -> None:
                 img_id_map[old_id] = new_id
                 img["id"] = new_id
 
-                old_filename = img["file_name"] 
+                old_filename = img["file_name"]
                 img["file_name"] = "../"+ old_filename
                 merged["images"].append(img)
 
-
-            bad = 0
-            for img in data["images"]:
-                p = ann_path.parent / "images" / img["file_name"]
-                with Image.open(p) as im:
-                    w, h = im.size
-                if (w, h) != (img["width"], img["height"]):
-                    print(f"Mismatch: {p}, ann=({img['width']}, {img['height']}), real=({w}, {h})")
-                    bad += 1
-
-            print(split, "mismatch =", bad)
-            
             # annotations
             for ann in data["annotations"]:
                 ann["id"] = ann["id"] + ann_id_offset
