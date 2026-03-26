@@ -1,3 +1,8 @@
+"""
+Eaxmple
+python -m scripts.tools.auto_orient_tool --input-dir images_raw --output-dir images_fixed
+
+"""
 import argparse
 from pathlib import Path
 
