@@ -71,6 +71,7 @@ def resolve_image_path(split_dir: Path, file_name: str) -> Path:
 
 def segmentation_to_binary_mask(segmentation, height: int, width: int) -> np.ndarray:
     # COCO segmentation 可能是 polygon list 或 RLE dict，統一轉成 (H, W) binary mask。
+    print(type(segmentation))
     if isinstance(segmentation, list):
         if not segmentation:
             return np.zeros((height, width), dtype=np.uint8)
@@ -165,7 +166,6 @@ def extract_split(
             continue
 
         for ann in grouped_annotations.get(image_id, []):
-            print(ann.get("id"))
             # crowd 標註通常不是單一乾淨 instance，不適合直接輸出成單張 PNG。
             if ann.get("iscrowd", 0):
                 print(
@@ -191,6 +191,7 @@ def extract_split(
 
             box = mask_to_xyxy(mask)
             if box is None:
+                print(ann.get("id"))
                 print(
                    f"Warning: No valid front-scene for {image_info['file_name']}. Skipping this image."
                 )                 
