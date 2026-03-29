@@ -84,9 +84,9 @@ def download_file(url: str, destination_path: Path, timeout: float) -> None:
 
 def extract_archive(archive_path: Path, output_dir: Path) -> None:
     """解壓縮 zip 壓縮檔到指定資料夾。 Extract a zip archive into the target directory."""
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(archive_path, "r") as zf:
-        zf.extractall(output_dir)
+        zf.extractall(output_dir.parent)
 
 
 def prepare_default_dataset(
