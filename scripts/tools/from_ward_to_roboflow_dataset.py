@@ -25,7 +25,7 @@ not a category name.
 
 
 Usage:
-    python -m scripts.tools.convert_coco_to_split --input-root data/ward_dataset
+    python -m scripts.tools.from_ward_to_roboflow_dataset --input-root data/ward_dataset
 """
 
 from __future__ import annotations
