@@ -8,9 +8,10 @@ Download TACO images from Flickr and auto-orient them during save.
 預設流程 Default workflow:
 1. 下載釋出的 taco_dataset zip 壓縮檔
 2. 解壓縮到資料集目錄
-3. 尋找 train/valid/test 的 annotation 檔案
-4. 為各 split 下載缺少的圖片
-5. 呼叫 scripts.tools.auto_orient_tool 套用 auto orientation
+3. 自動辨識實際的資料集根目錄
+4. 尋找 train/valid/test 的 annotation 檔案
+5. 為各 split 平行下載缺少的圖片
+6. 呼叫 scripts.tools.auto_orient_tool 套用 auto orientation
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ import argparse
 import json
 import sys
 import zipfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 from pathlib import Path
 
@@ -33,6 +35,7 @@ DEFAULT_ARCHIVE_URL = (
 )
 DEFAULT_ARCHIVE_NAME = "data/taco_dataset.zip"
 DEFAULT_DATASET_DIR = "data/taco_dataset"
+DEFAULT_NUM_WORKERS = 8
 SPLITS = ("train", "valid", "test")
 ANNOTATION_FILENAMES = ("_annotation.coco.json", "_annotations.coco.json")
 
@@ -66,6 +69,12 @@ def parse_args() -> argparse.Namespace:
         default=30.0,
         help="每次 HTTP 請求的逾時秒數。 HTTP timeout in seconds for each request.",
     )
+    parser.add_argument(
+        "--num-workers",
+        type=int,
+        default=DEFAULT_NUM_WORKERS,
+        help="平行下載的執行緒數量。 Number of worker threads for parallel downloads.",
+    )
     return parser.parse_args()
 
 
@@ -75,8 +84,6 @@ def download_file(url: str, destination_path: Path, timeout: float) -> None:
     with requests.get(url, stream=True, timeout=timeout) as response:
         response.raise_for_status()
         with destination_path.open("wb") as f:
-            # 以串流方式下載大檔，避免一次載入全部內容。
-            # Stream large files to avoid loading everything into memory at once.
             for chunk in response.iter_content(chunk_size=1024 * 1024):
                 if chunk:
                     f.write(chunk)
@@ -174,24 +181,43 @@ def download_and_orient_image(
             temp_path.unlink()
 
 
-def print_progress(prefix: str, current_index: int, total_count: int) -> None:
+def print_progress(prefix: str, current_count: int, total_count: int) -> None:
     """輸出簡單進度條。 Print a simple progress bar."""
     bar_size = 30
-    filled = int(bar_size * current_index / total_count) if total_count else 0
+    filled = int(bar_size * current_count / total_count) if total_count else 0
     sys.stdout.write(
         "{}[{}{}] - {}/{}\r".format(
             prefix,
             "=" * filled,
             "." * (bar_size - filled),
-            current_index,
+            current_count,
             total_count,
         )
     )
     sys.stdout.flush()
 
 
-def process_annotation_file(dataset_path: Path, timeout: float) -> None:
-    """處理單一 annotation 檔案，下載缺少的圖片。 Process one annotation file and download missing images."""
+def process_single_image(image: dict, dataset_dir: Path, timeout: float) -> None:
+    """處理單張圖片下載任務。 Process a single image download task."""
+    file_name = image["file_name"]
+    image_url = image.get("flickr_url") or image.get("flickr_640_url")
+    destination_path = dataset_dir / file_name
+
+    if destination_path.exists():
+        return
+
+    if not image_url:
+        raise ValueError(f"Missing Flickr URL for image: {file_name}")
+
+    download_and_orient_image(
+        image_url=image_url,
+        destination_path=destination_path,
+        timeout=timeout,
+    )
+
+
+def process_annotation_file(dataset_path: Path, timeout: float, num_workers: int) -> None:
+    """處理單一 annotation 檔案，平行下載缺少的圖片。 Process one annotation file and download missing images in parallel."""
     dataset_dir = dataset_path.parent
 
     print(f"Processing annotation file: {dataset_path}")
@@ -200,28 +226,24 @@ def process_annotation_file(dataset_path: Path, timeout: float) -> None:
 
     images = annotations.get("images", [])
     total_count = len(images)
+    completed_count = 0
 
-    for index, image in enumerate(images, start=1):
-        file_name = image["file_name"]
-        image_url = image.get("flickr_url") or image.get("flickr_640_url")
-        destination_path = dataset_dir / file_name
+    max_workers = max(1, min(num_workers, total_count if total_count else 1))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_image = {
+            executor.submit(process_single_image, image, dataset_dir, timeout): image
+            for image in images
+        }
 
-        # 只有目標圖片不存在時才下載，方便中斷後續跑。
-        # Only download when the destination image is missing so reruns can resume.
-        if not destination_path.exists():
-            if not image_url:
-                raise ValueError(f"Missing Flickr URL for image: {file_name}")
-            download_and_orient_image(
-                image_url=image_url,
-                destination_path=destination_path,
-                timeout=timeout,
+        for future in as_completed(future_to_image):
+            image = future_to_image[future]
+            future.result()
+            completed_count += 1
+            print_progress(
+                prefix=f"{dataset_dir.name}: ",
+                current_count=completed_count,
+                total_count=total_count,
             )
-
-        print_progress(
-            prefix=f"{dataset_dir.name}: ",
-            current_index=index,
-            total_count=total_count,
-        )
 
     sys.stdout.write(f"{dataset_dir.name}: Finished\n")
 
@@ -247,7 +269,11 @@ def main() -> None:
     )
 
     for annotation_path in annotation_paths:
-        process_annotation_file(annotation_path, timeout=args.timeout)
+        process_annotation_file(
+            annotation_path,
+            timeout=args.timeout,
+            num_workers=args.num_workers,
+        )
 
 
 if __name__ == "__main__":
