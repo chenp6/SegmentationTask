@@ -28,7 +28,7 @@ from PIL import Image
 from scripts.tools.auto_orient_tool import auto_orient_and_strip
 
 DEFAULT_ARCHIVE_URL = (
-    "https://github.com/chenp6/SegmentationTask/releases/download/taco_dataset/"
+    "https://github.com/chenp6/SegmentationTask/releases/download/add_taco_dataset/"
     "taco_dataset.zip"
 )
 DEFAULT_ARCHIVE_NAME = "data/taco_dataset.zip"
