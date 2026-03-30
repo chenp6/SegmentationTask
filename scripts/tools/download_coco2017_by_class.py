@@ -21,8 +21,12 @@ Example:
       test/
         _annotations.coco.json
         *.jpg
-      _fiftyone_cache/
-        ...
+
+下載來源說明 / Download source:
+    COCO 原始資料會由 FiftyOne 下載到其預設 cache 位置，
+    再匯出成 <output-root> 下的 COCO 格式資料夾。
+    The raw COCO files are downloaded by FiftyOne into its default cache,
+    and then exported into the COCO-format folders under <output-root>.
 """
 
 import argparse
@@ -87,8 +91,8 @@ def export_split(dataset: fo.Dataset, output_root: Path, split_name: str) -> Non
     print(f"Exported split: {split_name} -> {split_dir}")
 
 
-def download_split(split_name: str, cache_root: Path, classes: list[str]) -> fo.Dataset:
-    """下載單一 split 到 FiftyOne cache。Download one split into the FiftyOne cache."""
+def download_split(split_name: str, classes: list[str]) -> fo.Dataset:
+    """下載單一 split。Download one split via FiftyOne zoo."""
     # train split 保留 shuffle，validation/test 則維持原順序。
     # Keep shuffling for train, while preserving the default order for validation/test.
     dataset = foz.load_zoo_dataset(
@@ -97,7 +101,6 @@ def download_split(split_name: str, cache_root: Path, classes: list[str]) -> fo.
         shuffle=(split_name == "train"),
         classes=classes,
         label_types=["detections", "segmentations"],
-        dataset_dir=str(cache_root),
     )
     print(f"Downloaded split: {split_name}")
     return dataset
@@ -109,15 +112,10 @@ def main() -> None:
     output_root = Path(args.output_root)
     output_root.mkdir(parents=True, exist_ok=True)
 
-    # 先下載到內部 cache，再匯出成專案可直接使用的 COCO 結構。
-    # Download into an internal cache first, then export into a project-friendly COCO layout.
-    cache_root = output_root / "_fiftyone_cache"
-    cache_root.mkdir(parents=True, exist_ok=True)
-
-    # 依序處理 train / validation / test，並將 validation 匯出為 valid。
-    # Process train / validation / test in order, exporting validation as valid.
+    # COCO 原始資料由 FiftyOne 管理下載位置，這裡只負責匯出成專案要用的格式。
+    # FiftyOne manages the raw download location; this script exports the project-ready format.
     for split_name in ("train", "validation", "test"):
-        dataset = download_split(split_name, cache_root, args.classes)
+        dataset = download_split(split_name, args.classes)
         export_split(dataset, output_root, split_name)
 
 

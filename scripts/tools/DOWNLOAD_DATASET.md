@@ -133,16 +133,14 @@ data/coco_filtered/
   test/
     _annotations.coco.json
     *.jpg
-  _fiftyone_cache/
-    ...
 ```
 
 Notes:
 
 - `validation` is exported as `valid`.
-- `_fiftyone_cache/` is only an internal download cache used by FiftyOne.
 - The final dataset you should use is `train/`, `valid/`, and `test/`.
-- If export completes successfully, `_fiftyone_cache/` can usually be removed.
+- The raw COCO files are downloaded into FiftyOne's default cache directory, not under `output-root`.
+- On Linux, that cache is commonly located under `~/fiftyone/`.
 
 ## Ward dataset preparation(尚未建置)
 
