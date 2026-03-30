@@ -126,13 +126,10 @@ Expected output layout:
 data/coco_filtered/
   train/
     _annotations.coco.json
-    *.jpg
   valid/
     _annotations.coco.json
-    *.jpg
   test/
     _annotations.coco.json
-    *.jpg
 ```
 
 Notes:
