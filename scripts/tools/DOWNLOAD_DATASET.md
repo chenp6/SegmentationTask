@@ -138,6 +138,7 @@ Notes:
 - The final dataset you should use is `train/`, `valid/`, and `test/`.
 - The raw COCO files are downloaded into FiftyOne's default cache directory, not under `output-root`.
 - On Linux, that cache is commonly located under `~/fiftyone/`.
+- COCO `test2017` does not include public ground-truth annotations, so local quantitative evaluation is usually done on `valid` rather than `test`.
 
 ## Ward dataset preparation(尚未建置)
 
