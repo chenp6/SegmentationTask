@@ -4,7 +4,7 @@ Convert COCO instance data in a fixed input layout into Roboflow-style
 split annotation outputs.
 
 輸入格式 Input layout:
-    <input-root>/rgb_image/<tag>/*.png
+    <input-root>/rgb_image/<tag>_rgb/*.png
     <input-root>/coco_json/<tag>.json
 
 這裡的 tag 只是資料夾名稱與 json 檔名的對應標記，不代表類別名稱。
@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Dict, Iterable, Sequence, Tuple
 
 SPLITS = ("train", "valid", "test")
+EXCLUDED_CATEGORY_IDS = {998, 999}
 
 
 def parse_args() -> argparse.Namespace:
@@ -151,13 +152,16 @@ def merge_coco_files(json_files: Iterable[Path], input_root: Path) -> dict:
             new_image["id"] = next_image_id
 
             original_file_name = Path(image["file_name"]).name
-            new_image["file_name"] = f"../rgb_image/{tag}/{original_file_name}"
+            new_image["file_name"] = f"../rgb_image/{tag}_rgb/{original_file_name}"
             merged["images"].append(new_image)
             next_image_id += 1
 
         # 重新指定 annotation id，並同步更新 image_id
         # Reassign annotation ids and remap image_id references.
         for annotation in data.get("annotations", []):
+            if annotation.get("category_id") in EXCLUDED_CATEGORY_IDS:
+                continue
+
             source_image_id = annotation["image_id"]
             if source_image_id not in image_id_map:
                 continue
