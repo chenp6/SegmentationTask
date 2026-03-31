@@ -152,7 +152,13 @@ def merge_coco_files(json_files: Iterable[Path], input_root: Path) -> dict:
             new_image["id"] = next_image_id
 
             original_file_name = Path(image["file_name"]).name
-            new_image["file_name"] = f"../rgb_image/{tag}_rgb/{original_file_name}"
+            parts = original_file_name.split("_", 1)
+            if len(parts) == 2:
+                newfilename = f"rgb_{parts[1]}"
+            else:
+                newfilename = f"rgb_{original_file_name}"
+            new_image["file_name"] = f"../rgb_image/{tag}_rgb/{newfilename}"
+
             merged["images"].append(new_image)
             next_image_id += 1
 
