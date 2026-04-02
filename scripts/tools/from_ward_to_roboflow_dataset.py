@@ -127,6 +127,8 @@ def merge_coco_files(json_files: Iterable[Path], input_root: Path) -> dict:
     Merge multiple COCO json files and reindex image/annotation ids.
     """
     merged = {"images": [], "annotations": [], "categories": []}
+    temp_annotations = []
+    
     categories_by_id: Dict[int, dict] = {}
     next_image_id = 1
     next_annotation_id = 1
@@ -141,16 +143,18 @@ def merge_coco_files(json_files: Iterable[Path], input_root: Path) -> dict:
         # Merge categories by category id.
         for category in data.get("categories", []):
             current_category_id = category["id"]
-            if current_category_id not in categories_by_id:
-                categories_by_id[current_category_id] = copy.deepcopy(category)
+            if (
+                current_category_id in categories_by_id
+                or current_category_id in EXCLUDED_CATEGORY_IDS
+            ):
+                continue
+            categories_by_id[current_category_id] = copy.deepcopy(category)
+
 
         # 重新指定 image id，並把 file_name 改成指向原始 rgb_image/<tag>/ 路徑
         # Reassign image ids and rewrite file_name to point at the original rgb_image/<tag>/ path.
         for image in data.get("images", []):
             new_image = copy.deepcopy(image)
-            image_id_map[image["id"]] = next_image_id
-            new_image["id"] = next_image_id
-
             original_file_name = Path(image["file_name"]).name
             parts = original_file_name.split("_", 1)
             if len(parts) == 2:
@@ -158,9 +162,16 @@ def merge_coco_files(json_files: Iterable[Path], input_root: Path) -> dict:
             else:
                 newfilename = f"rgb_{original_file_name}"
             new_image["file_name"] = f"../rgb_image/{tag}_rgb/{newfilename}"
+            file_path = input_root / "rgb_image" / f"{tag}_rgb" / newfilename
 
-            merged["images"].append(new_image)
-            next_image_id += 1
+
+            # Check if it specifically exists and is a file
+            if file_path.is_file():
+                image_id_map[image["id"]] = next_image_id
+                new_image["id"] = next_image_id
+                merged["images"].append(new_image)
+                next_image_id += 1
+
 
         # 重新指定 annotation id，並同步更新 image_id
         # Reassign annotation ids and remap image_id references.
@@ -175,12 +186,23 @@ def merge_coco_files(json_files: Iterable[Path], input_root: Path) -> dict:
             new_annotation = copy.deepcopy(annotation)
             new_annotation["id"] = next_annotation_id
             new_annotation["image_id"] = image_id_map[source_image_id]
-            merged["annotations"].append(new_annotation)
+            temp_annotations.append(new_annotation)
             next_annotation_id += 1
 
-    merged["categories"] = [
-        categories_by_id[key] for key in sorted(categories_by_id.keys())
-    ]
+    new_categories_id_map: Dict[int, int] = {} #{old_id ,new_id}
+    
+    for index, old_id in enumerate(sorted(categories_by_id)):
+        temp = copy.deepcopy(categories_by_id[old_id])
+        temp["id"] = index+1
+        merged["categories"].append(temp)
+        new_categories_id_map[old_id] = temp["id"]
+    
+    for annotation in temp_annotations:
+        temp_annotation = copy.deepcopy(annotation)
+        temp_annotation["category_id"] = new_categories_id_map[temp_annotation["category_id"]]
+        merged["annotations"].append(temp_annotation)
+
+    
     return merged
 
 
