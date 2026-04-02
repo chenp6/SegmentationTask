@@ -31,7 +31,8 @@ from PIL import Image, ImageColor, ImageDraw
 from pycocotools import mask as coco_mask
 
 SPLITS = ("train", "valid", "test")
-EXCLUDED_CATEGORY_IDS = {6, 22, 25, 66, 48, 51,998,999}
+EXCLUDED_CATEGORY_IDS = {6, 22, 25, 66, 48, 51,501,504,998,999}
+# EXCLUDED_CATEGORY_IDS = {998,999}
 
 
 def parse_args() -> argparse.Namespace:
