@@ -222,6 +222,35 @@ output/
 
 ---
 
+## Dataset Tools
+
+Tile a COCO detection or segmentation dataset into smaller crops:
+
+```bash
+python -m scripts.tools.tile_coco_dataset \
+  --input-root data/medbin_dataset \
+  --output-root data/medbin_dataset_tiled \
+  --tile-width 1280 \
+  --tile-height 1280 \
+  --stride-x 960 \
+  --stride-y 960 \
+  --splits train valid test
+```
+
+The tiled output keeps COCO annotations and writes:
+
+```text
+data/medbin_dataset_tiled/
+  train/_annotations.coco.json
+  train/*.jpg|png
+  valid/_annotations.coco.json
+  valid/*.jpg|png
+  test/_annotations.coco.json
+  test/*.jpg|png
+```
+
+---
+
 ## Research
 
 See [docs/segmentation_research.md](docs/segmentation_research.md) for a detailed analysis comparing all approaches, pros/cons, and future improvement suggestions.

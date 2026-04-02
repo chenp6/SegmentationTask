@@ -422,7 +422,7 @@ def export_ground_truth_images(
                 draw.text((x + 2, y + 2), category_name, fill=color)
 
         composed = Image.alpha_composite(image, overlay).convert("RGB")
-        output_path = split_output_dir / f"{Path(image_info['file_name']).stem}__gt.jpg"
+        output_path = split_output_dir / f"{Path(image_info['id']).stem}__gt.jpg"
         composed.save(output_path, quality=95)
         image_count += 1
 
