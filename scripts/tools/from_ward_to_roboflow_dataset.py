@@ -98,6 +98,15 @@ def parse_args() -> argparse.Namespace:
             "Maximum number of preview images to export per split."
         ),
     )
+    parser.add_argument(
+        "--preview-background",
+        choices=["original", "white"],
+        default="original",
+        help=(
+            "ground truth 預覽圖背景要使用原圖還是白底。"
+            "Background for ground-truth preview images: original image or white canvas."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -367,6 +376,7 @@ def export_ground_truth_images(
     dataset: dict,
     output_dir: Path,
     max_preview_images: int | None,
+    preview_background: str,
 ) -> None:
     """輸出 ground truth 視覺化影像。Export ground-truth visualization images."""
     split_output_dir = output_dir / split
@@ -391,7 +401,12 @@ def export_ground_truth_images(
             print(f"Skipping preview image because source was not found: {image_path}")
             continue
 
-        image = Image.open(image_path).convert("RGBA")
+        source_image = Image.open(image_path).convert("RGBA")
+        if preview_background == "white":
+            image = Image.new("RGBA", source_image.size, (255, 255, 255, 255))
+        else:
+            image = source_image
+
         overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay)
 
@@ -463,6 +478,7 @@ def run_random_split(input_root: Path, args: argparse.Namespace) -> None:
                 dataset=split_dataset,
                 output_dir=ground_truth_output_dir,
                 max_preview_images=args.max_preview_images,
+                preview_background=args.preview_background,
             )
 
 
