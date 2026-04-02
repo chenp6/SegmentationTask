@@ -31,7 +31,7 @@ from PIL import Image, ImageColor, ImageDraw
 from pycocotools import mask as coco_mask
 
 SPLITS = ("train", "valid", "test")
-EXCLUDED_CATEGORY_IDS = {998, 999}
+EXCLUDED_CATEGORY_IDS = {6, 22, 25, 66, 48, 51,998,999}
 
 
 def parse_args() -> argparse.Namespace:
@@ -422,7 +422,7 @@ def export_ground_truth_images(
                 draw.text((x + 2, y + 2), category_name, fill=color)
 
         composed = Image.alpha_composite(image, overlay).convert("RGB")
-        output_path = split_output_dir / f"{Path(image_info['id']).stem}__gt.jpg"
+        output_path = split_output_dir / f"{image_info['id']}__gt.jpg"
         composed.save(output_path, quality=95)
         image_count += 1
 
