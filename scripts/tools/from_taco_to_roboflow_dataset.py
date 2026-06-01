@@ -24,9 +24,42 @@ import json
 from pathlib import Path
 
 
+def build_supercategory_mapping(categories: list[dict]) -> tuple[list[dict], dict[int, int]]:
+    """
+    Build new categories using `supercategory` and return old->new category_id mapping.
+    """
+    super_to_new_id: dict[str, int] = {}
+    new_categories: list[dict] = []
+    old_to_new: dict[int, int] = {}
+
+    for cat in categories:
+        old_id = int(cat["id"])
+        super_name = str(cat.get("supercategory") or cat.get("name") or f"category_{old_id}")
+
+        if super_name not in super_to_new_id:
+            new_id = len(super_to_new_id) + 1
+            super_to_new_id[super_name] = new_id
+            new_categories.append(
+                {
+                    "id": new_id,
+                    "name": super_name,
+                    "supercategory": super_name,
+                }
+            )
+
+        old_to_new[old_id] = super_to_new_id[super_name]
+
+    return new_categories, old_to_new
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-root", required=True, help="Path to TACO Dataset input root path")
+    parser.add_argument(
+        "--use-supercategory-as-category",
+        action="store_true",
+        help="Replace fine-grained categories with supercategory labels",
+    )
     args = parser.parse_args()
     root = Path(args.input_root)  
 
@@ -51,7 +84,16 @@ def main() -> None:
             data = json.load(open(json_file))
 
             if merged["categories"] is None:
-                merged["categories"] = data["categories"]
+                if args.use_supercategory_as_category:
+                    new_categories, _ = build_supercategory_mapping(data["categories"])
+                    merged["categories"] = new_categories
+                else:
+                    merged["categories"] = data["categories"]
+
+            if args.use_supercategory_as_category:
+                _, old_to_new_cat = build_supercategory_mapping(data["categories"])
+            else:
+                old_to_new_cat = None
 
             img_id_map = {}
 
@@ -70,6 +112,8 @@ def main() -> None:
             for ann in data["annotations"]:
                 ann["id"] = ann["id"] + ann_id_offset
                 ann["image_id"] = img_id_map[ann["image_id"]]
+                if old_to_new_cat is not None:
+                    ann["category_id"] = old_to_new_cat[int(ann["category_id"])]
                 merged["annotations"].append(ann)
 
             img_id_offset += len(data["images"])

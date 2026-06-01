@@ -9,6 +9,12 @@ Example:
       --version 1 \
       --api-key <ROBOFLOW_API_KEY> \
       --output-dir data/hiod_coco
+
+        python -m scripts.tools.download_roboflow_coco \
+      --dataset-url https://universe.roboflow.com/s-workspace-hmqmj/ward_dataset_labeled \
+      --version 1 \
+      --api-key ZeJtPkNQWikIYptlGQdF \
+      --output-dir data/ward_dataset_labeled
 """
 import argparse
 import json
